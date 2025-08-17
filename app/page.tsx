@@ -82,7 +82,6 @@ export default function Home() {
   }
 
   const processCommand = async (command: string) => {
-    // ONLY clear if explicitly requested
     if (command.toLowerCase().includes('clear') || command.toLowerCase().includes('reset') || command.toLowerCase().includes('remove')) {
       setCards([])
       speak("Dashboard cleared. Ready for new analysis.")
@@ -99,16 +98,10 @@ export default function Home() {
       const data = await response.json()
       
       if (data.cards && Array.isArray(data.cards)) {
-        // ADD new cards to existing ones, don't replace
         setCards(prevCards => {
-          // Remove duplicates based on title to avoid showing same card type multiple times
           const existingTitles = prevCards.map(c => c.title)
           const newCards = data.cards.filter((card: Card) => !existingTitles.includes(card.title))
-          
-          // Combine and sort by priority (higher priority first)
           const allCards = [...newCards, ...prevCards]
-          
-          // Keep maximum of 12 cards, remove oldest if exceeding
           return allCards.slice(0, 12)
         })
       }
@@ -148,7 +141,9 @@ export default function Home() {
   // Add keyboard shortcut for spacebar
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !e.target?.matches('input, textarea, button')) {
+      // Fix: Properly check if target is an Element before using matches
+      const target = e.target as Element | null
+      if (e.code === 'Space' && target && !target.matches('input, textarea, button')) {
         e.preventDefault()
         toggleVoice()
       }
